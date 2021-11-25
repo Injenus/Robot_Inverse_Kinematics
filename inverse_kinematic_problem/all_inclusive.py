@@ -18,10 +18,12 @@ OFFSET_COORD = [[xy + d for xy, d in zip(DEFAULT_COORD[i], DELTA)] for el, i in
 # of class Coordinates() sorted by type of robot.
 ROBOT_TYPE = ('ДЕКАРТ', 'КОЛЕР', 'ЦИЛИНДР', 'СКАРА')
 robot_point = {robot: [] for robot in ROBOT_TYPE}
-# Set lengths (m) of linear links of Cylinder and Color robots respectively.
+# Set lengths (1 = unit line in a rectangular coordinate system) of linear
+# links of Cylinder and Color robots respectively.
 A_LEN_CYLIN = 0.3
 A_LEN_COLOR = 0.9
-# Set lengths (m) first and second link of Scara robot and
+# Set lengths (1 = unit line in a rectangular coordinate system) first and
+# second link of Scara robot and
 # spatial orientation of manipulator: -1 - left, 1 - right.
 A1_LEN_SCARA = 0.4
 A2_LEN_SCARA = 0.8
