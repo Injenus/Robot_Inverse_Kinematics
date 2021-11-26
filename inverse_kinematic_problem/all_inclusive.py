@@ -36,7 +36,7 @@ def to_fixed(value, digits=2):
     return value if value is None else f"{value:.{digits}f}"
 
 
-class Coordinates():
+class Coordinates:
     """Class Coordinates is used to store and edit point information.
 
     The main application is the calculation of the generalized coordinates of
@@ -90,7 +90,10 @@ class Coordinates():
         """
 
         if self.type == ROBOT_TYPE[3]:
-            a = math.atan(self.y / self.x)
+            try:
+                a = math.atan(self.y / self.x)
+            except ZeroDivisionError:
+                a = 0
             r = (self.x ** 2 + self.y ** 2) ** (1 / 2)
             g1 = math.acos(
                 (A1_LEN_SCARA ** 2 + r ** 2 - A2_LEN_SCARA ** 2) / (
@@ -99,9 +102,13 @@ class Coordinates():
                 (math.sin(g1) * A1_LEN_SCARA) / (A2_LEN_SCARA))
             self.q1 = (-math.pi) / 2 + a * ARM
             self.q2 = (g1 + g2) * ARM
+
         elif self.type == ROBOT_TYPE[2]:
-            self.q1 = -math.atan(self.x / self.y)
-            self.q2 = ((self.y) ** 2 + (self.x) ** 2) ** (1 / 2) - A_LEN_CYLIN
+            try:
+                self.q1 = -math.atan(self.x / self.y)
+            except ZeroDivisionError:
+                self.q1 = 0
+            self.q2 = (self.y ** 2 + self.x ** 2) ** (1 / 2) - A_LEN_CYLIN
         elif self.type == ROBOT_TYPE[1]:
             self.q1 = self.y - (A_LEN_COLOR ** 2 - self.x ** 2) ** (1 / 2)
             self.q2 = -math.asin(self.x / A_LEN_COLOR)
