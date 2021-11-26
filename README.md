@@ -1,8 +1,7 @@
-# ОШИБКА В ВЫЧИСЛЕНИЯХ ДЛЯ СКАРЫ!!!
 # ~~Несерьёзная~~ Кинематика роботов :stuck_out_tongue_winking_eye:
 Содержит в себе пакеты инструментов для решения прямой и обратной задач кинематики роботов типа Декарт, Цилиндр и Скара.
 * [Пакет "forward_kinematics_problem"](#chapter-1)
-* [Пакет "inverse_kinematic_problem"](#chapter-2)
+* [Пакет "inverse_kinematics_problem"](#chapter-2)
 
 <a id="chapter-1"></a>
 ## Пакет "forward_kinematics_problem"
