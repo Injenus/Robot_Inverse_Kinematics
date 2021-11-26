@@ -11,7 +11,7 @@ DEFAULT_COORD = ((0.2, 0.4), (0.2, 0.6), (0.4, 0.8), (0.6, 0.8),
                  (0.8, 0.6), (0.5, 0.5), (0.8, 0.4), (0.6, 0.2),
                  (0.2, 0.4))
 num = 9
-DELTA = (0, 0)
+DELTA = (0, -0.1)
 OFFSET_COORD = [[xy + d for xy, d in zip(DEFAULT_COORD[i], DELTA)] for el, i in
                 zip(DEFAULT_COORD, range(len(DEFAULT_COORD)))]
 # Set tuple of types of robots and dictionary to store variable members
@@ -32,7 +32,7 @@ ARM = 1
 
 # The function of rounding a real number to a specified number of
 # decimal places.
-def to_fixed(value, digits=2):
+def to_fixed(value, digits=DECIMAL_PLACES):
     return value if value is None else f"{value:.{digits}f}"
 
 
@@ -90,10 +90,7 @@ class Coordinates:
         """
 
         if self.type == ROBOT_TYPE[3]:
-            try:
-                a = math.atan(self.y / self.x)
-            except ZeroDivisionError:
-                a = 0
+            a = math.atan(self.y / self.x)
             r = (self.x ** 2 + self.y ** 2) ** (1 / 2)
             g1 = math.acos(
                 (A1_LEN_SCARA ** 2 + r ** 2 - A2_LEN_SCARA ** 2) / (
@@ -102,24 +99,30 @@ class Coordinates:
                 (math.sin(g1) * A1_LEN_SCARA) / (A2_LEN_SCARA))
             self.q1 = (-math.pi) / 2 + a * ARM
             self.q2 = (g1 + g2) * ARM
-
+            self.q1 = str(to_fixed(self.q1)) + ' (' + str(
+                to_fixed(math.degrees(self.q1))) + ' deg)'
+            self.q2 = str(to_fixed(self.q2)) + ' (' + str(
+                to_fixed(math.degrees(self.q2))) + ' deg)'
         elif self.type == ROBOT_TYPE[2]:
-            try:
-                self.q1 = -math.atan(self.x / self.y)
-            except ZeroDivisionError:
-                self.q1 = 0
+            self.q1 = -math.atan(self.x / self.y)
             self.q2 = (self.y ** 2 + self.x ** 2) ** (1 / 2) - A_LEN_CYLIN
+            self.q1 = str(to_fixed(self.q1)) + ' (' + str(
+                to_fixed(math.degrees(self.q1))) + ' deg)'
+            self.q2 = to_fixed(self.q2)
         elif self.type == ROBOT_TYPE[1]:
             self.q1 = self.y - (A_LEN_COLOR ** 2 - self.x ** 2) ** (1 / 2)
             self.q2 = -math.asin(self.x / A_LEN_COLOR)
+            self.q1 = to_fixed(self.q1)
+            self.q2 = str(to_fixed(self.q2)) + ' (' + str(
+                to_fixed(math.degrees(self.q2))) + ' deg)'
         elif self.type == ROBOT_TYPE[0]:
             self.q1 = self.x
             self.q2 = self.y
+            self.q1 = to_fixed(self.q1)
+            self.q2 = to_fixed(self.q2)
         else:
             self.q1 = None
             self.q2 = None
-        self.q1 = to_fixed(self.q1, DECIMAL_PLACES)
-        self.q2 = to_fixed(self.q2, DECIMAL_PLACES)
 
     def print_cartesian_coordinates(self):
         """Print the point's own coordinates in the rectangular coordinate
