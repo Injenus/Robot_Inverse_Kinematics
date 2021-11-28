@@ -1,7 +1,7 @@
 # IKP solution for any two-link robot.
 # Designed to work with "Моделирование роботов" software.
 import math
-from tkinter import Tk, Canvas, Frame, BOTH
+from tkinter import Tk, Canvas
 
 # The number of decimal places in the output.
 DECIMAL_PLACES = 2
@@ -18,7 +18,7 @@ OFFSET_COORD = [[xy + d for xy, d in zip(DEFAULT_COORD[i], DELTA)] for el, i in
 scale = 1
 for i in range(1, 9):
     OFFSET_COORD[i][0] = OFFSET_COORD[0][0] + scale * (
-                OFFSET_COORD[i][0] - OFFSET_COORD[0][0])
+            OFFSET_COORD[i][0] - OFFSET_COORD[0][0])
     OFFSET_COORD[i][1] = OFFSET_COORD[0][1] + scale * (
             OFFSET_COORD[i][1] - OFFSET_COORD[0][1])
 print(DEFAULT_COORD)
@@ -99,12 +99,16 @@ class Coordinates:
         """
 
         if self.type == ROBOT_TYPE[3]:
-            r=(self.x**2+self.y**2)**(1/2)
-            alpha=math.atan(self.y/self.x)
-            beta=math.acos((A1_LEN_SCARA**2+r**2-A2_LEN_SCARA**2)/(2*A1_LEN_SCARA*r))
-            gamma=math.acos((A1_LEN_SCARA**2+A2_LEN_SCARA**2-r**2)/(2*A1_LEN_SCARA*A2_LEN_SCARA))
-            self.q1=-math.pi/2+beta+alpha
-            self.q2=gamma-math.pi
+            r = (self.x ** 2 + self.y ** 2) ** (1 / 2)
+            alpha = math.atan(self.y / self.x)
+            beta = math.acos(
+                (A1_LEN_SCARA ** 2 + r ** 2 - A2_LEN_SCARA ** 2) / (
+                        2 * A1_LEN_SCARA * r))
+            gamma = math.acos(
+                (A1_LEN_SCARA ** 2 + A2_LEN_SCARA ** 2 - r ** 2) / (
+                        2 * A1_LEN_SCARA * A2_LEN_SCARA))
+            self.q1 = -math.pi / 2 + alpha + beta * ARM
+            self.q2 = (- math.pi + gamma) * ARM
             self.q1 = str(to_fixed(self.q1)) + ' (' + str(
                 to_fixed(math.degrees(self.q1))) + ' deg)'
             self.q2 = str(to_fixed(self.q2)) + ' (' + str(
@@ -173,6 +177,72 @@ class Coordinates:
                                                                 self.q2))
 
 
+class Geometry:
+    """An object of the class is a line segment, rectangle, oval or point with
+    a non-zero radius, which has start and end coordinates.
+
+
+    In the case of a line segment, the object has the start coordinates of
+    the segment and the end coordinates.
+    In the case of a rectangle, the object has the coordinates of
+    the upper-left corner and the lower-right corner.
+    In the case of an oval, the object has the coordinates of the upper left
+    corner of the rectangle in which the oval is inscribed, and
+    the lower-right.
+    In the case of a point, the object has only initial coordinates,
+    the radius is set for all objects initially.
+
+    Methods
+    ------
+    scaling()
+        For line segments only. Extend a segment by a specified number of
+        times, relative to its beginning.
+    draw()
+        Draw an object with the specified outline thickness and color.
+    """
+
+    point_radius = 4
+
+    def __init__(self, x_start, y_start, type_name='name', x_end=0.0,
+                 y_end=0.0):
+        self.x_start = x_start
+        self.y_start = y_start
+        self.x_end = x_end
+        self.y_end = y_end
+        self.type_name = type_name
+        self.scaling(canvas_scaling_factor)
+
+    def scaling(self, n=1.0):
+        """Extend a segment n times relative to its beginning.
+        """
+        if self.type_name=='segment':
+            self.x_end = self.x_start + n * (self.x_end - self.x_start)
+            self.y_end = self.y_start + n * (self.y_end - self.y_start)
+
+    def draw(self, width_line=1, color='black'):
+        """Draw an object with the specified thickness and color.
+        """
+
+        if self.type_name == 'segment':
+            canvas.create_line(
+                window_size[0] / origin_offset[0] + self.x_start,
+                window_size[1] / origin_offset[1] - self.y_start,
+                window_size[0] / origin_offset[0] + self.x_end,
+                window_size[1] / origin_offset[1] - self.y_end,
+                width=width_line,
+                fill=color)
+        elif self.type_name == 'point':
+            canvas.create_oval(
+                window_size[0] / origin_offset[
+                    0] + self.x_start - self.point_radius,
+                window_size[1] / origin_offset[
+                    1] - self.y_start + self.point_radius,
+                window_size[0] / origin_offset[
+                    0] + self.x_start + self.point_radius,
+                window_size[1] / origin_offset[
+                    1] - self.y_start - self.point_radius, width=0, fill=color)
+
+
 # In the case of the default operating mode, objects of the class Coordinates()
 # are formed on the basis of the built-in dataset.
 # In the case of the mode of operation by input data, you first need to enter
@@ -227,75 +297,36 @@ else:
         for robot in ROBOT_TYPE:
             current_point = Coordinates(robot, name, x, y)
             robot_point[robot].append(current_point)
-# Print generalized coordinates of each point for each type of robot.
+# Printing generalized coordinates of each point for each type of robot.
 print('\n', end='')
 print(OFFSET_COORD)
 for robot in ROBOT_TYPE:
     print('\n', end='')
     for i in range(num):
         robot_point[robot][i].print_generalized_coordinates()
-
+# Setting the window for drawing. Adjust its size. Drawing coordinate axes and
+# a grid.
 window = Tk()
-window.title('Работа с canvas')
-
-window_size = (500, 500)
+window.title('Результат построения роботом Скара')
+window_size = (500, 400)
 origin_offset = (3, 1.5)
 canvas = Canvas(window, width=window_size[0], height=window_size[1],
                 bg="white",
                 cursor="pencil")
 canvas.pack()
-
-
-class Geometry:
-    """Объект класса - отрезок, квадрат или овал, имеющий начальные и конечные координаты."""
-
-    def __init__(self, x_start, y_start, type_name='name', x_end=0.0,
-                 y_end=0.0):
-        self.x_start = x_start
-        self.y_start = y_start
-        self.x_end = x_end
-        self.y_end = y_end
-        self.type_name = type_name
-        self.scaling(canvas_scaling_factor)
-
-    def scaling(self, n=1.0):
-        """Удлиняет отрезок в n раз, относительно его начала."""
-
-        self.x_end = self.x_start + n * (self.x_end - self.x_start)
-        self.y_end = self.y_start + n * (self.y_end - self.y_start)
-
-    def draw(self, width_line=1, color='black'):
-        """Рисует объект с заданной толщиной и цветом."""
-
-        if self.type_name == 'segment':
-            canvas.create_line(
-                window_size[0] / origin_offset[0] + self.x_start,
-                window_size[1] / origin_offset[1] - self.y_start,
-                window_size[0] / origin_offset[0] + self.x_end,
-                window_size[1] / origin_offset[1] - self.y_end,
-                width=width_line,
-                fill=color)
-        elif self.type_name == 'point':
-            canvas.create_oval(
-                window_size[0] / origin_offset[
-                    0] + self.x_start - point_radius,
-                window_size[1] / origin_offset[
-                    1] - self.y_start + point_radius,
-                window_size[0] / origin_offset[
-                    0] + self.x_start + point_radius,
-                window_size[1] / origin_offset[
-                    1] - self.y_start - point_radius, width=0, fill=color)
-
-
 canvas_scaling_factor = 200
-point_radius = 4
 x_origin = Geometry(-500, 0, 'segment', 500, 0)
 x_origin.draw(5, 'gray')
 y_origin = Geometry(0, -500, 'segment', 0, 500)
 y_origin.draw(5, 'gray')
-
+for i in range(-window_size[1],window_size[1],4):
+    grid_horizontal=Geometry(-window_size[0], i*10,'segment',window_size[0], i*10)
+    grid_horizontal.draw(color='gray')
+for i in range(-window_size[0],window_size[0],4):
+    grid_vertical=Geometry(i*10,-window_size[1],'segment',i*10,window_size[0])
+    grid_vertical.draw(color='gray')
+# Drawing the links of the robot and the points of the contour.
 graphic = {robot: [[] for i in range(num)] for robot in ROBOT_TYPE}
-
 for i in range(num):
     a1 = Geometry(0, 0, 'segment', (-1) * A1_LEN_SCARA * math.sin(
         float(robot_point['СКАРА'][i].q1.split(' ')[0])),
@@ -315,13 +346,13 @@ for i in range(num):
     contour_point = Geometry(a2.x_end, a2.y_end, 'point')
     graphic['СКАРА'][i].append(contour_point)
     contour_point.draw(color='red')
-
+# Drawing the connecting lines of a path.
 for i in range(1, num):
     line = Geometry(graphic['СКАРА'][i - 1][2].x_start,
                     graphic['СКАРА'][i - 1][2].y_start, 'segment',
                     graphic['СКАРА'][i][2].x_start,
                     graphic['СКАРА'][i][2].y_start)
     line.scaling(1 / canvas_scaling_factor)
-    line.draw(color='green')
+    line.draw(3, 'green')
 
 window.mainloop()
