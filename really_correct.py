@@ -11,7 +11,7 @@ DEFAULT_MODE = True
 DEFAULT_COORD = ((0.2, 0.4), (0.2, 0.6), (0.4, 0.8), (0.6, 0.8),
                  (0.8, 0.6), (0.5, 0.5), (0.8, 0.4), (0.6, 0.2),
                  (0.2, 0.4))
-num = 9
+num = len(DEFAULT_COORD)
 DELTA = (0, 0)
 OFFSET_COORD = [[xy + d for xy, d in zip(DEFAULT_COORD[i], DELTA)] for el, i in
                 zip(DEFAULT_COORD, range(len(DEFAULT_COORD)))]
@@ -21,8 +21,9 @@ for i in range(1, 9):
             OFFSET_COORD[i][0] - OFFSET_COORD[0][0])
     OFFSET_COORD[i][1] = OFFSET_COORD[0][1] + scale * (
             OFFSET_COORD[i][1] - OFFSET_COORD[0][1])
-print(DEFAULT_COORD)
-print(OFFSET_COORD)
+print('\nВы работаете с координатами: ')
+for i in range(num):
+    print('Point_{}: {}'.format(str(i + 1), tuple(OFFSET_COORD[i])))
 # Set tuple of types of robots and dictionary to store variable members
 # of class Coordinates() sorted by type of robot.
 ROBOT_TYPE = ('ДЕКАРТ', 'КОЛЕР', 'ЦИЛИНДР', 'СКАРА')
@@ -156,8 +157,9 @@ class Coordinates:
         this robot (this robot type).
         """
 
-        print('{}, {}: q1 = {}, q2 = {}'.format(self.type, self.name, self.q1,
-                                                self.q2))
+        # print('{}, {}: q1 = {}, q2 = {}'.format(self.type, self.name, self.q1,
+        #                                         self.q2))
+        print()
 
     def print_all_data(self):
         """Print all information about the point.
@@ -215,7 +217,7 @@ class Geometry:
     def scaling(self, n=1.0):
         """Extend a segment n times relative to its beginning.
         """
-        if self.type_name=='segment':
+        if self.type_name == 'segment':
             self.x_end = self.x_start + n * (self.x_end - self.x_start)
             self.y_end = self.y_start + n * (self.y_end - self.y_start)
 
@@ -298,8 +300,6 @@ else:
             current_point = Coordinates(robot, name, x, y)
             robot_point[robot].append(current_point)
 # Printing generalized coordinates of each point for each type of robot.
-print('\n', end='')
-print(OFFSET_COORD)
 for robot in ROBOT_TYPE:
     print('\n', end='')
     for i in range(num):
@@ -319,11 +319,13 @@ x_origin = Geometry(-500, 0, 'segment', 500, 0)
 x_origin.draw(5, 'gray')
 y_origin = Geometry(0, -500, 'segment', 0, 500)
 y_origin.draw(5, 'gray')
-for i in range(-window_size[1],window_size[1],4):
-    grid_horizontal=Geometry(-window_size[0], i*10,'segment',window_size[0], i*10)
+for i in range(-window_size[1], window_size[1], 4):
+    grid_horizontal = Geometry(-window_size[0], i * 10, 'segment',
+                               window_size[0], i * 10)
     grid_horizontal.draw(color='gray')
-for i in range(-window_size[0],window_size[0],4):
-    grid_vertical=Geometry(i*10,-window_size[1],'segment',i*10,window_size[0])
+for i in range(-window_size[0], window_size[0], 4):
+    grid_vertical = Geometry(i * 10, -window_size[1], 'segment', i * 10,
+                             window_size[0])
     grid_vertical.draw(color='gray')
 # Drawing the links of the robot and the points of the contour.
 graphic = {robot: [[] for i in range(num)] for robot in ROBOT_TYPE}
