@@ -157,9 +157,8 @@ class Coordinates:
         this robot (this robot type).
         """
 
-        # print('{}, {}: q1 = {}, q2 = {}'.format(self.type, self.name, self.q1,
-        #                                         self.q2))
-        print()
+        print('{}, {}: q1 = {}, q2 = {}'.format(self.type, self.name, self.q1,
+                                                self.q2))
 
     def print_all_data(self):
         """Print all information about the point.
