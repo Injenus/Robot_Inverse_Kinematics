@@ -7,15 +7,23 @@ from tkinter import Tk, Canvas
 DECIMAL_PLACES = 2
 # Operating mode, "True" - default coordinates, "False" - input data.
 DEFAULT_MODE = True
+
+
+# The function of rounding a real number to a specified number of
+# decimal places.
+def to_fixed(value, digits=DECIMAL_PLACES):
+    return value if value is None else float(f"{value:.{digits}f}")
+
+
 # Set default coordinates, number and set offset.
 DEFAULT_COORD = ((0.2, 0.4), (0.2, 0.6), (0.4, 0.8), (0.6, 0.8),
                  (0.8, 0.6), (0.5, 0.5), (0.8, 0.4), (0.6, 0.2),
                  (0.2, 0.4))
 num = len(DEFAULT_COORD)
-DELTA = (0, 0)
+DELTA = (0.1, 0.03)
 OFFSET_COORD = [[xy + d for xy, d in zip(DEFAULT_COORD[i], DELTA)] for el, i in
                 zip(DEFAULT_COORD, range(len(DEFAULT_COORD)))]
-scale = 1
+scale = 0.8
 for i in range(1, 9):
     OFFSET_COORD[i][0] = OFFSET_COORD[0][0] + scale * (
             OFFSET_COORD[i][0] - OFFSET_COORD[0][0])
@@ -23,27 +31,83 @@ for i in range(1, 9):
             OFFSET_COORD[i][1] - OFFSET_COORD[0][1])
 print('\nВы работаете с координатами: ')
 for i in range(num):
-    print('Point_{}: {}'.format(str(i + 1), tuple(OFFSET_COORD[i])))
-# Set tuple of types of robots and dictionary to store variable members
+    print('Point_{}: {}'.format(str(i + 1), (
+        to_fixed(OFFSET_COORD[i][0]), to_fixed(OFFSET_COORD[i][1]))))
+# Setting tuple of types of robots and dictionary to store variable members
 # of class Coordinates() sorted by type of robot.
-ROBOT_TYPE = ('ДЕКАРТ', 'КОЛЕР', 'ЦИЛИНДР', 'СКАРА')
+ROBOT_TYPE = ('DESCARTES', 'COLOR', 'CYLINDER', 'SCARA')
 robot_point = {robot: [] for robot in ROBOT_TYPE}
-# Set lengths (1 = unit line in a rectangular coordinate system) of rotary
-# links of Cylinder and Color robots respectively.
-A_LEN_CYLIN = 0.3
-A_LEN_COLOR = 0.9
-# Set lengths (1 = unit line in a rectangular coordinate system) first and
-# second link of Scara robot and
-# spatial orientation of manipulator: -1 - left, 1 - right.
-A1_LEN_SCARA = 0.7
-A2_LEN_SCARA = 0.49
+# Number of robot links (this program is designed for two-link robots).
+LINKS_NUMBER = 2
+# Setting lengths in meters of first and second links of Descartes, Color,
+# Cylinder, Scara robots and spatial orientation of manipulator of Scara:
+# -1 - left, 1 - right.
+LEN_DESCARTES = (1, 1)
+LEN_COLOR = (0.5, 0.9)
+LEN_CYLIN = (0.52, 0.48)
+LEN_SCARA = (0.7, 0.49)
 ARM = 1
+# Setting section radii in meters of first and second links of Descartes,
+# Color, Cylinder, Scara robots.
+RADIUS_DESCARTES = (0.015, 0.015)
+RADIUS_COLOR = (0.02, 0.02)
+RADIUS_CYLIN = (0.02, 0.02)
+RADIUS_SCARA = (0.02, 0.02)
+# Setting material densities (kg/m^3) of first and second links of Descartes,
+# Color, Cylinder, Scara robots.
+DENSITY_DESCARTES = (2700, 2700)
+DENSITY_COLOR = (2700, 2700)
+DENSITY_CYLIN = (2700, 2700)
+DENSITY_SCARA = (2700, 2700)
+# Just tuples for ease of use.
+LENGTH = (LEN_DESCARTES, LEN_COLOR, LEN_CYLIN, LEN_SCARA)
+RADIUS = (RADIUS_DESCARTES, RADIUS_COLOR, RADIUS_CYLIN, RADIUS_SCARA)
+DENSITY = (DENSITY_DESCARTES, DENSITY_COLOR, DENSITY_CYLIN, DENSITY_SCARA)
 
 
-# The function of rounding a real number to a specified number of
-# decimal places.
-def to_fixed(value, digits=DECIMAL_PLACES):
-    return value if value is None else f"{value:.{digits}f}"
+class Robot:
+
+    def __init__(self, type, len1, len2, r1, r2, dens1, dens2):
+        self.type = type
+        self.length = (len1, len2)
+        self.radius = (r1, r2)
+        self.density = (dens1, dens2)
+        temp = [None, None]
+        for i in range(LINKS_NUMBER):
+            temp[i] = to_fixed(
+                math.pi * self.radius[i] ** 2 * self.length[i] * self.density[
+                    i], 3)
+        self.mass = tuple(temp)
+        for i in range(LINKS_NUMBER):
+            temp[i] = to_fixed(
+                1 / 3 * self.mass[i] * self.length[i] ** 2 + 1 / 4 * self.mass[
+                    i] * self.radius[i] ** 2, 3)
+        self.inertia = tuple(temp)
+
+    def print_parameters(self):
+        print('\n', end='')
+        print('{}:'.format(self.type))
+        print('Длина первого звена: {} м, длина второго звена: {} м.'.format(
+            self.length[0], self.length[1]))
+        print('Радиус сечения первого звена: {} м, '
+              'радиус сечения второго звена: {} м'.format(self.radius[0],
+                                                          self.radius[1]))
+        print('Плотность материала первого звена: {} кг/м^3, '
+              'плотность материала второго звена: {} кг/м^3'.format(
+            self.density[0], self.density[1]))
+        print('Масса первого звена: {} кг, '
+              'масса второго звена: {} кг.'.format(self.mass[0], self.mass[1]))
+        print('Момент инерции первого звена: {} кг*м^2, '
+              'момент инерции второго звена: {} кг*м^2.'.format(
+            self.inertia[0],
+            self.inertia[
+                1]))
+
+
+for i in range(len(ROBOT_TYPE)):
+    config = Robot(ROBOT_TYPE[i], LENGTH[i][0], LENGTH[i][1], RADIUS[i][0],
+                   RADIUS[i][1], DENSITY[i][0], DENSITY[i][1])
+    config.print_parameters()
 
 
 class Coordinates:
@@ -103,11 +167,11 @@ class Coordinates:
             r = (self.x ** 2 + self.y ** 2) ** (1 / 2)
             alpha = math.atan(self.y / self.x)
             beta = math.acos(
-                (A1_LEN_SCARA ** 2 + r ** 2 - A2_LEN_SCARA ** 2) / (
-                        2 * A1_LEN_SCARA * r))
+                (LEN_SCARA[0] ** 2 + r ** 2 - LEN_SCARA[1] ** 2) / (
+                        2 * LEN_SCARA[0] * r))
             gamma = math.acos(
-                (A1_LEN_SCARA ** 2 + A2_LEN_SCARA ** 2 - r ** 2) / (
-                        2 * A1_LEN_SCARA * A2_LEN_SCARA))
+                (LEN_SCARA[0] ** 2 + LEN_SCARA[1] ** 2 - r ** 2) / (
+                        2 * LEN_SCARA[0] * LEN_SCARA[1]))
             self.q1 = -math.pi / 2 + alpha + beta * ARM
             self.q2 = (- math.pi + gamma) * ARM
             self.q1 = str(to_fixed(self.q1)) + ' (' + str(
@@ -116,13 +180,13 @@ class Coordinates:
                 to_fixed(math.degrees(self.q2))) + ' deg)'
         elif self.type == ROBOT_TYPE[2]:
             self.q1 = -math.atan(self.x / self.y)
-            self.q2 = (self.y ** 2 + self.x ** 2) ** (1 / 2) - A_LEN_CYLIN
+            self.q2 = (self.y ** 2 + self.x ** 2) ** (1 / 2) - LEN_CYLIN[0]
             self.q1 = str(to_fixed(self.q1)) + ' (' + str(
                 to_fixed(math.degrees(self.q1))) + ' deg)'
             self.q2 = to_fixed(self.q2)
         elif self.type == ROBOT_TYPE[1]:
-            self.q1 = self.y - (A_LEN_COLOR ** 2 - self.x ** 2) ** (1 / 2)
-            self.q2 = -math.asin(self.x / A_LEN_COLOR)
+            self.q1 = self.y - (LEN_COLOR[1] ** 2 - self.x ** 2) ** (1 / 2)
+            self.q2 = -math.asin(self.x / LEN_COLOR[1])
             self.q1 = to_fixed(self.q1)
             self.q2 = str(to_fixed(self.q2)) + ' (' + str(
                 to_fixed(math.degrees(self.q2))) + ' deg)'
@@ -329,30 +393,30 @@ for i in range(-window_size[0], window_size[0], 4):
 # Drawing the links of the robot and the points of the contour.
 graphic = {robot: [[] for i in range(num)] for robot in ROBOT_TYPE}
 for i in range(num):
-    a1 = Geometry(0, 0, 'segment', (-1) * A1_LEN_SCARA * math.sin(
-        float(robot_point['СКАРА'][i].q1.split(' ')[0])),
-                  A1_LEN_SCARA * math.cos(
-                      float(robot_point['СКАРА'][i].q1.split(' ')[0])))
-    graphic['СКАРА'][i].append(a1)
+    a1 = Geometry(0, 0, 'segment', (-1) * LEN_SCARA[0] * math.sin(
+        float(robot_point['SCARA'][i].q1.split(' ')[0])),
+                  LEN_SCARA[0] * math.cos(
+                      float(robot_point['SCARA'][i].q1.split(' ')[0])))
+    graphic['SCARA'][i].append(a1)
     a1.draw()
     a2 = Geometry(a1.x_end, a1.y_end, 'segment',
-                  a1.x_end - A2_LEN_SCARA * math.sin(
-                      float(robot_point['СКАРА'][i].q1.split(' ')[0]) + float(
-                          robot_point['СКАРА'][i].q2.split(' ')[0])),
-                  (a1.y_end + A2_LEN_SCARA * math.cos(
-                      float(robot_point['СКАРА'][i].q1.split(' ')[0]) + float(
-                          robot_point['СКАРА'][i].q2.split(' ')[0]))))
-    graphic['СКАРА'][i].append(a2)
+                  a1.x_end - LEN_SCARA[1] * math.sin(
+                      float(robot_point['SCARA'][i].q1.split(' ')[0]) + float(
+                          robot_point['SCARA'][i].q2.split(' ')[0])),
+                  (a1.y_end + LEN_SCARA[1] * math.cos(
+                      float(robot_point['SCARA'][i].q1.split(' ')[0]) + float(
+                          robot_point['SCARA'][i].q2.split(' ')[0]))))
+    graphic['SCARA'][i].append(a2)
     a2.draw()
     contour_point = Geometry(a2.x_end, a2.y_end, 'point')
-    graphic['СКАРА'][i].append(contour_point)
+    graphic['SCARA'][i].append(contour_point)
     contour_point.draw(color='red')
 # Drawing the connecting lines of a path.
 for i in range(1, num):
-    line = Geometry(graphic['СКАРА'][i - 1][2].x_start,
-                    graphic['СКАРА'][i - 1][2].y_start, 'segment',
-                    graphic['СКАРА'][i][2].x_start,
-                    graphic['СКАРА'][i][2].y_start)
+    line = Geometry(graphic['SCARA'][i - 1][2].x_start,
+                    graphic['SCARA'][i - 1][2].y_start, 'segment',
+                    graphic['SCARA'][i][2].x_start,
+                    graphic['SCARA'][i][2].y_start)
     line.scaling(1 / canvas_scaling_factor)
     line.draw(3, 'green')
 
